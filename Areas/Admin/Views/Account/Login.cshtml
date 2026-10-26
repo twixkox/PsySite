@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Вход";
+}
+<div class="login-wrap">
+    <form method="post" class="login-card">
+        <h1>Вход в админку</h1>
+        @if (ViewData["PasswordProblem"] is string problem)
+        {
+            <div class="flash error">
+                @problem Укажите надёжный пароль в настройке <code>Admin:Password</code>
+                (переменная окружения <code>Admin__Password</code>) и перезапустите сайт.
+            </div>
+        }
+        @if (ViewData["Error"] is string error)
+        {
+            <div class="flash error">@error</div>
+        }
+        <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+        <label class="field">
+            <span>Логин</span>
+            <input name="login" autocomplete="username" required autofocus />
+        </label>
+        <label class="field">
+            <span>Пароль</span>
+            <input name="password" type="password" autocomplete="current-password" required />
+        </label>
+        <button type="submit" class="btn">Войти</button>
+        <a href="/" class="muted small">← На сайт</a>
+    </form>
+</div>

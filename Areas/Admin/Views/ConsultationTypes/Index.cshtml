@@ -1,0 +1,33 @@
+@model List<ConsultationType>
+@{
+    ViewData["Title"] = "Форматы и цены";
+}
+<div class="page-top">
+    <h1>Форматы консультаций</h1>
+    <a href="/admin/consultationtypes/create" class="btn">+ Добавить формат</a>
+</div>
+
+<table class="table panel">
+    <thead>
+        <tr><th>Название</th><th>Длительность</th><th>Цена</th><th>Предоплата</th><th></th></tr>
+    </thead>
+    <tbody>
+        @foreach (var t in Model)
+        {
+            <tr class="@(t.IsActive ? "" : "dim")">
+                <td>
+                    <a href="/admin/consultationtypes/edit/@t.Id"><b>@t.Name</b></a>
+                    @if (!t.IsActive) { <span class="badge">скрыт</span> }
+                </td>
+                <td>@t.DurationMinutes мин</td>
+                <td class="nowrap">@Fmt.Price(t.Price)</td>
+                <td>@(t.Price > 0 && t.RequirePrepayment ? "да" : "нет")</td>
+                <td class="right">
+                    <form method="post" asp-antiforgery="true" action="/admin/consultationtypes/delete/@t.Id">
+                        <button type="submit" class="link-btn danger" data-confirm="Удалить «@t.Name»?">удалить</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

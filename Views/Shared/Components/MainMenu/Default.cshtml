@@ -1,0 +1,11 @@
+@model List<PsySite.ViewComponents.MenuItem>
+@{
+    var path = Context.Request.Path.Value ?? "/";
+}
+<ul>
+    @foreach (var item in Model)
+    {
+        var active = path == item.Url || path.StartsWith(item.Url + "/");
+        <li><a href="@item.Url" class="@(active ? "active" : null)">@item.Title</a></li>
+    }
+</ul>

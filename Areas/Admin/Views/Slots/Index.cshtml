@@ -1,0 +1,112 @@
+@model SlotsViewModel
+@{
+    ViewData["Title"] = "Расписание";
+    var days = Model.Slots.GroupBy(s => s.StartsAt.Date).ToList();
+    var g = Model.Generate;
+    var dayNames = new (DayOfWeek Day, string Name)[]
+    {
+        (DayOfWeek.Monday, "Пн"), (DayOfWeek.Tuesday, "Вт"), (DayOfWeek.Wednesday, "Ср"), (DayOfWeek.Thursday, "Чт"),
+        (DayOfWeek.Friday, "Пт"), (DayOfWeek.Saturday, "Сб"), (DayOfWeek.Sunday, "Вс")
+    };
+}
+<div class="page-top">
+    <h1>Расписание</h1>
+    <div class="tabs tabs-inline">
+        <a href="/admin/slots" class="@(Model.ShowPast ? "" : "active")">Предстоящие</a>
+        <a href="/admin/slots?past=true" class="@(Model.ShowPast ? "active" : "")">Прошедшие</a>
+    </div>
+</div>
+
+<div class="cols cols-wide-left">
+    <section>
+        @if (days.Count == 0)
+        {
+            <p class="empty">Окон нет. Создайте их в форме справа — клиенты смогут выбирать время на сайте.</p>
+        }
+        @foreach (var day in days)
+        {
+            <div class="panel day">
+                <div class="day-head">
+                    <h3>@Fmt.DayTitle(day.Key)</h3>
+                    @if (!Model.ShowPast && day.Any(s => !s.IsBooked))
+                    {
+                        <form method="post" asp-antiforgery="true" action="/admin/slots/clearday">
+                            <input type="hidden" name="day" value="@day.Key.ToString("yyyy-MM-dd")" />
+                            <button type="submit" class="link-btn danger" data-confirm="Удалить все свободные окна в этот день?">убрать свободные</button>
+                        </form>
+                    }
+                </div>
+                <table class="table compact">
+                    @foreach (var s in day)
+                    {
+                        Model.BookingsBySlot.TryGetValue(s.Id, out var b);
+                        <tr>
+                            <td class="nowrap"><b>@Fmt.Time(s.StartsAt)–@Fmt.Time(s.EndsAt)</b></td>
+                            <td>
+                                @if (b is not null)
+                                {
+                                    <a href="/admin/bookings/details/@b.Id">@b.ClientName</a>
+                                    <span class="muted small">@b.ConsultationType?.Name</span>
+                                    <span class="badge b-@b.Status">@Fmt.Name(b.Status)</span>
+                                }
+                                else if (s.IsBooked)
+                                {
+                                    <span class="muted">занято</span>
+                                }
+                                else
+                                {
+                                    <span class="badge free">свободно</span>
+                                }
+                            </td>
+                            <td class="right">
+                                @if (b is null && !s.IsBooked)
+                                {
+                                    <form method="post" asp-antiforgery="true" action="/admin/slots/delete/@s.Id">
+                                        <button type="submit" class="link-btn danger" title="Удалить окно">×</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </table>
+            </div>
+        }
+    </section>
+
+    <aside>
+        <form method="post" asp-antiforgery="true" action="/admin/slots/generate" class="panel form">
+            <h2>Добавить окна на период</h2>
+            <div class="row-2">
+                <label class="field"><span>С</span><input type="date" name="Generate.From" value="@g.From.ToString("yyyy-MM-dd")" required /></label>
+                <label class="field"><span>По</span><input type="date" name="Generate.To" value="@g.To.ToString("yyyy-MM-dd")" required /></label>
+            </div>
+            <div class="field">
+                <span>Дни недели</span>
+                <div class="weekdays">
+                    @foreach (var (day, name) in dayNames)
+                    {
+                        <label class="chip"><input type="checkbox" name="Generate.Days" value="@day" @(g.Days.Contains(day) ? "checked" : "") /><span>@name</span></label>
+                    }
+                </div>
+            </div>
+            <label class="field">
+                <span>Время начала</span>
+                <input name="Generate.Times" value="@g.Times" />
+                <small class="muted">Через запятую, например: 10:00, 12:30, 18:00</small>
+            </label>
+            <label class="field">
+                <span>Длительность, мин</span>
+                <input type="number" name="Generate.DurationMinutes" value="@g.DurationMinutes" min="15" max="480" step="5" class="w-small" />
+            </label>
+            <button type="submit" class="btn">Создать окна</button>
+            <p class="muted small">Время, которое уже есть в расписании, пропускается — дублей не будет.</p>
+        </form>
+
+        <form method="post" asp-antiforgery="true" action="/admin/slots/add" class="panel form">
+            <h2>Одно окно</h2>
+            <label class="field"><span>Дата и время</span><input type="datetime-local" name="startsAt" required /></label>
+            <label class="field"><span>Длительность, мин</span><input type="number" name="durationMinutes" value="60" min="15" max="480" step="5" class="w-small" /></label>
+            <button type="submit" class="btn btn-ghost">Добавить</button>
+        </form>
+    </aside>
+</div>

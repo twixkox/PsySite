@@ -1,0 +1,67 @@
+@model Page
+@{
+    var isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "Новая страница" : Model.Title;
+    var isSystem = !isNew && PagesController.SystemSlugs.Contains(Model.Slug);
+}
+@section Head { <partial name="_EditorHead" /> }
+
+<div class="page-top">
+    <div>
+        <a href="/admin/pages" class="crumb">← К списку</a>
+        <h1>@ViewData["Title"]</h1>
+    </div>
+    @if (!isNew)
+    {
+        <a href="/@(Model.Slug == "home" ? "" : Model.Slug)" target="_blank" class="btn btn-ghost">Открыть на сайте ↗</a>
+    }
+</div>
+
+@if (Model.Slug == "home")
+{
+    <p class="muted">Подсказка: на главной каждый заголовок третьего уровня с абзацем под ним показывается отдельной колонкой (до трёх колонок).</p>
+}
+
+<form method="post" asp-antiforgery="true" action="/admin/pages/save" class="form panel">
+    <input type="hidden" asp-for="Id" />
+    <div asp-validation-summary="ModelOnly" class="flash error"></div>
+
+    <label class="field">
+        <span>Заголовок</span>
+        <input asp-for="Title" data-slug-source />
+        <span asp-validation-for="Title" class="field-error"></span>
+    </label>
+
+    <label class="field">
+        <span>Адрес страницы</span>
+        <span class="slug-input"><span class="muted">/</span><input asp-for="Slug" readonly="@isSystem" data-slug-target="@(isNew ? "auto" : "")" /></span>
+        <span asp-validation-for="Slug" class="field-error"></span>
+    </label>
+
+    <div class="field">
+        <span>Текст</span>
+        <textarea asp-for="Body" data-editor rows="16"></textarea>
+    </div>
+
+    <div class="row-2">
+        <label class="check"><input asp-for="ShowInMenu" /> Показывать в меню</label>
+        <label class="field inline">
+            <span>Порядок в меню</span>
+            <input asp-for="MenuOrder" class="w-small" />
+            <small class="muted">Разделы сайта: Проекты — 20, Консультации — 30, Тексты — 40, Вебинары — 50, События — 70.</small>
+        </label>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn">Сохранить</button>
+    </div>
+</form>
+
+@if (!isNew && !isSystem)
+{
+    <form method="post" asp-antiforgery="true" action="/admin/pages/delete/@Model.Id" class="danger-zone">
+        <button type="submit" class="btn btn-danger" data-confirm="Удалить страницу «@Model.Title»?">Удалить страницу</button>
+    </form>
+}
+
+@section Scripts { <partial name="_EditorScripts" /> }

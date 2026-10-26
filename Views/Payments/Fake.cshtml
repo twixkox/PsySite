@@ -1,0 +1,25 @@
+@model Order
+@{
+    ViewData["Title"] = "Тестовая оплата";
+}
+<section class="page-head">
+    <div class="container narrow">
+        <p class="eyebrow">Тестовый режим — деньги не списываются</p>
+        <h1>Оплата заказа №@Model.Id</h1>
+        <p class="lead">@Model.Description</p>
+        <p class="price price-lg">@Fmt.Price(Model.Amount)</p>
+
+        @if (Model.Status == OrderStatus.Pending)
+        {
+            <form method="post" class="actions-row">
+                <button type="submit" name="pay" value="true" class="btn">Оплатить (тест)</button>
+                <button type="submit" name="pay" value="false" class="btn btn-ghost">Вернуться без оплаты</button>
+            </form>
+        }
+        else
+        {
+            <p><a href="/pay/result/@Model.PublicId" class="btn">К статусу заказа</a></p>
+        }
+        <p class="muted small">Эта страница появляется, пока в настройках выбран Payments:Provider = "Fake". Когда подключите настоящую платёжную систему, здесь будет её страница оплаты.</p>
+    </div>
+</section>

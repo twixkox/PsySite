@@ -1,0 +1,115 @@
+@model ConsultationsViewModel
+@{
+    ViewData["Title"] = "Консультации";
+    var days = Model.Slots.GroupBy(s => s.StartsAt.Date).ToList();
+}
+<section class="page-head">
+    <div class="container narrow">
+        <h1>Консультации</h1>
+        @if (Model.Intro is not null)
+        {
+            <div class="prose lead-prose">@Html.Raw(Model.Intro.Body)</div>
+        }
+    </div>
+</section>
+
+<section class="section section-tight">
+    <div class="container narrow">
+        <form method="post" class="form booking-form" id="booking">
+            @if (Model.Error is not null)
+            {
+                <div class="flash flash-error">@Model.Error</div>
+            }
+            <input asp-for="Form.Website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+            <fieldset class="step">
+                <legend><span class="step-num">1</span> Формат</legend>
+                <div class="choice-list">
+                    @foreach (var t in Model.Types)
+                    {
+                        <label class="choice">
+                            <input type="radio" name="Form.ConsultationTypeId" value="@t.Id" @(Model.Form.ConsultationTypeId == t.Id ? "checked" : "") />
+                            <span class="choice-body">
+                                <span class="choice-title">@t.Name</span>
+                                <span class="choice-meta">@t.DurationMinutes мин · @Fmt.Price(t.Price)</span>
+                                @if (!string.IsNullOrEmpty(t.Description))
+                                {
+                                    <span class="choice-desc">@t.Description</span>
+                                }
+                            </span>
+                        </label>
+                    }
+                </div>
+                <span asp-validation-for="Form.ConsultationTypeId" class="field-error"></span>
+            </fieldset>
+
+            <fieldset class="step">
+                <legend><span class="step-num">2</span> Время <small class="muted">(московское)</small></legend>
+                @if (days.Count == 0)
+                {
+                    <p class="empty">Свободного времени в расписании сейчас нет. Напишите на <a href="mailto:@SiteOptions.Value.ContactEmail">@SiteOptions.Value.ContactEmail</a> — подберём время.</p>
+                }
+                else
+                {
+                    <div class="slot-days">
+                        @foreach (var day in days)
+                        {
+                            <div class="slot-day">
+                                <div class="slot-day-title">@Fmt.DayTitle(day.Key)</div>
+                                <div class="slot-list">
+                                    @foreach (var s in day)
+                                    {
+                                        <label class="slot">
+                                            <input type="radio" name="Form.SlotId" value="@s.Id" @(Model.Form.SlotId == s.Id ? "checked" : "") />
+                                            <span>@Fmt.Time(s.StartsAt)</span>
+                                        </label>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                <span asp-validation-for="Form.SlotId" class="field-error"></span>
+            </fieldset>
+
+            <fieldset class="step">
+                <legend><span class="step-num">3</span> О вас</legend>
+                <div class="form-row-2">
+                    <div class="field">
+                        <label asp-for="Form.Name"></label>
+                        <input asp-for="Form.Name" autocomplete="name" />
+                        <span asp-validation-for="Form.Name" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Form.Email"></label>
+                        <input asp-for="Form.Email" type="email" autocomplete="email" />
+                        <span asp-validation-for="Form.Email" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Form.Phone"></label>
+                        <input asp-for="Form.Phone" type="tel" autocomplete="tel" />
+                    </div>
+                    <div class="field">
+                        <label asp-for="Form.ContactMethod"></label>
+                        <input asp-for="Form.ContactMethod" placeholder="Telegram, WhatsApp, звонок…" />
+                    </div>
+                </div>
+                <div class="field">
+                    <label asp-for="Form.Comment"></label>
+                    <textarea asp-for="Form.Comment" rows="4"></textarea>
+                </div>
+            </fieldset>
+
+            <label class="check">
+                <input type="checkbox" name="Form.Consent" value="true" @(Model.Form.Consent ? "checked" : "") />
+                <span>Принимаю условия <a href="/offer" target="_blank">оферты</a> и даю <a href="/agreement" target="_blank">согласие на обработку данных</a></span>
+            </label>
+            <span asp-validation-for="Form.Consent" class="field-error"></span>
+
+            <div class="form-actions">
+                <button type="submit" class="btn" @(days.Count == 0 ? "disabled" : "")>Записаться</button>
+                <p class="muted small">Если выбран платный формат, после нажатия откроется страница оплаты. Время держится за вами @SiteOptions.Value.UnpaidBookingHoldMinutes минут.</p>
+            </div>
+        </form>
+    </div>
+</section>

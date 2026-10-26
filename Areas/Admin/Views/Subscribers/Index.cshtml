@@ -1,0 +1,34 @@
+@model List<Subscriber>
+@{
+    ViewData["Title"] = "Подписчики";
+}
+<div class="page-top">
+    <h1>Подписчики рассылки <span class="muted">@Model.Count</span></h1>
+    <a href="/admin/subscribers/export" class="btn btn-ghost">Скачать CSV</a>
+</div>
+<p class="muted">Письма рассылки удобнее отправлять через сервис рассылок (Unisender, SendPulse и т.п.): выгрузите CSV и загрузите список туда.</p>
+
+@if (Model.Count == 0)
+{
+    <p class="empty">Подписчиков пока нет. Форма подписки — в подвале каждой страницы сайта.</p>
+}
+else
+{
+    <table class="table panel">
+        <thead><tr><th>Почта</th><th>Дата</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td>@s.Email</td>
+                    <td class="nowrap">@Fmt.DateTime(s.CreatedAt)</td>
+                    <td class="right">
+                        <form method="post" asp-antiforgery="true" action="/admin/subscribers/delete/@s.Id">
+                            <button type="submit" class="link-btn danger" data-confirm="Удалить @s.Email?">удалить</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520">
+  <!-- Заглушка вместо фотографии. Замените на настоящее фото: положите portrait.jpg в wwwroot/img
+       и поменяйте путь в Views/Home/Index.cshtml -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e9d6c3"/>
+      <stop offset="1" stop-color="#c99a7a"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="520" fill="url(#bg)"/>
+  <circle cx="300" cy="120" r="46" fill="#f4e7d8" opacity=".7"/>
+  <path d="M0 420 C 90 380, 160 400, 230 380 S 360 340, 400 360 L400 520 L0 520 Z" fill="#8a6650" opacity=".35"/>
+  <ellipse cx="200" cy="230" rx="62" ry="74" fill="#6f5242" opacity=".55"/>
+  <path d="M90 520 C 95 400, 140 330, 200 330 S 305 400, 310 520 Z" fill="#6f5242" opacity=".55"/>
+</svg>

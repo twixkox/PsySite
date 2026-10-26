@@ -1,0 +1,78 @@
+@model BookingDetailsViewModel
+@{
+    var b = Model.Booking;
+    ViewData["Title"] = b.ClientName;
+    var statuses = new[] { BookingStatus.New, BookingStatus.Confirmed, BookingStatus.Done };
+}
+<div class="page-top">
+    <div>
+        <a href="/admin/bookings" class="crumb">← Все записи</a>
+        <h1>@b.ClientName</h1>
+        <p class="muted">Запись №@b.Id от @Fmt.DateTime(b.CreatedAt)</p>
+    </div>
+    <span class="badge big b-@b.Status">@Fmt.Name(b.Status)</span>
+</div>
+
+<div class="cols">
+    <section class="panel">
+        <h2>@b.ConsultationType?.Name</h2>
+        <p class="when">@Fmt.DayTitle(b.Slot!.StartsAt), @Fmt.Time(b.Slot.StartsAt)–@Fmt.Time(b.Slot.StartsAt.AddMinutes(b.ConsultationType?.DurationMinutes ?? b.Slot.DurationMinutes))</p>
+        <dl class="dl">
+            <dt>Почта</dt><dd><a href="mailto:@b.ClientEmail">@b.ClientEmail</a></dd>
+            <dt>Телефон</dt><dd>@(string.IsNullOrEmpty(b.ClientPhone) ? "—" : b.ClientPhone)</dd>
+            <dt>Связь</dt><dd>@(string.IsNullOrEmpty(b.ContactMethod) ? "—" : b.ContactMethod)</dd>
+            <dt>Комментарий</dt><dd class="pre">@(string.IsNullOrEmpty(b.Comment) ? "—" : b.Comment)</dd>
+        </dl>
+
+        @if (b.Status != BookingStatus.Cancelled)
+        {
+            <div class="status-buttons">
+                @foreach (var s in statuses.Where(s => s != b.Status))
+                {
+                    <form method="post" asp-antiforgery="true" action="/admin/bookings/setstatus/@b.Id">
+                        <input type="hidden" name="status" value="@s" />
+                        <button type="submit" class="btn btn-ghost btn-small">@Fmt.Name(s)</button>
+                    </form>
+                }
+                <form method="post" asp-antiforgery="true" action="/admin/bookings/setstatus/@b.Id">
+                    <input type="hidden" name="status" value="@BookingStatus.Cancelled" />
+                    <button type="submit" class="btn btn-danger btn-small" data-confirm="Отменить запись? Время снова станет свободным.">Отменить запись</button>
+                </form>
+            </div>
+        }
+    </section>
+
+    <section>
+        <form method="post" asp-antiforgery="true" action="/admin/bookings/savenote/@b.Id" class="panel form">
+            <h2>Заметка для себя</h2>
+            <textarea name="adminNote" rows="5" placeholder="Клиент её не видит">@b.AdminNote</textarea>
+            <button type="submit" class="btn btn-small">Сохранить заметку</button>
+        </form>
+
+        <div class="panel">
+            <h2>Оплата</h2>
+            @if (Model.Orders.Count == 0)
+            {
+                <p class="muted">Без оплаты.</p>
+            }
+            @foreach (var o in Model.Orders)
+            {
+                <p>Заказ №@o.Id · @Fmt.Price(o.Amount) · <span class="badge o-@o.Status">@Fmt.Name(o.Status)</span>
+                    @if (o.PaidAt is DateTime paid) { <span class="muted small">@Fmt.DateTime(paid)</span> }</p>
+            }
+        </div>
+
+        @if (Model.OtherBookings.Count > 0)
+        {
+            <div class="panel">
+                <h2>Другие записи клиента</h2>
+                <ul class="plain">
+                    @foreach (var other in Model.OtherBookings)
+                    {
+                        <li><a href="/admin/bookings/details/@other.Id">@Fmt.DateTime(other.Slot!.StartsAt)</a> <span class="badge b-@other.Status">@Fmt.Name(other.Status)</span></li>
+                    }
+                </ul>
+            </div>
+        }
+    </section>
+</div>

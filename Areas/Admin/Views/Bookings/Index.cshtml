@@ -1,0 +1,48 @@
+@model List<Booking>
+@{
+    ViewData["Title"] = "Записи";
+    var filter = ViewData["Filter"] as string ?? "upcoming";
+    var q = ViewData["Q"] as string;
+    var tabs = new (string Key, string Title)[] { ("upcoming", "Предстоящие"), ("past", "Прошедшие"), ("cancelled", "Отменённые"), ("all", "Все") };
+}
+<div class="page-top">
+    <h1>Записи на консультации</h1>
+    <form method="get" class="search">
+        <input type="hidden" name="filter" value="@filter" />
+        <input type="search" name="q" value="@q" placeholder="Имя, почта или телефон" />
+    </form>
+</div>
+
+<div class="tabs">
+    @foreach (var (key, title) in tabs)
+    {
+        <a href="/admin/bookings?filter=@key" class="@(filter == key ? "active" : "")">@title</a>
+    }
+</div>
+
+@if (Model.Count == 0)
+{
+    <p class="empty">Записей нет.</p>
+}
+else
+{
+    <table class="table panel">
+        <thead>
+            <tr><th>Когда</th><th>Клиент</th><th>Формат</th><th>Статус</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var b in Model)
+            {
+                <tr>
+                    <td class="nowrap"><b>@Fmt.DateTime(b.Slot!.StartsAt)</b></td>
+                    <td>
+                        <a href="/admin/bookings/details/@b.Id"><b>@b.ClientName</b></a><br />
+                        <span class="muted small">@b.ClientEmail @(string.IsNullOrEmpty(b.ClientPhone) ? "" : "· " + b.ClientPhone)</span>
+                    </td>
+                    <td>@b.ConsultationType?.Name</td>
+                    <td><span class="badge b-@b.Status">@Fmt.Name(b.Status)</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

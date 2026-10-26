@@ -1,0 +1,77 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Сводка";
+}
+<h1>Сводка</h1>
+
+@if (Model.ErrorsToday > 0)
+{
+    <div class="dash-alert">
+        <span>Сегодня на сайте @Fmt.Plural(Model.ErrorsToday, "ошибка", "ошибки", "ошибок"). Стоит посмотреть, что случилось.</span>
+        <a href="/admin/logs?file=errors-@(DateTime.Now.ToString("yyyyMMdd")).log&level=error" class="btn btn-danger btn-small">Открыть журнал</a>
+    </div>
+}
+
+<div class="stats">
+    <a href="/admin/bookings" class="stat">
+        <span class="stat-value">@Model.NewBookings</span>
+        <span class="stat-label">новых записей</span>
+    </a>
+    <a href="/admin/slots" class="stat">
+        <span class="stat-value">@Model.FreeSlots</span>
+        <span class="stat-label">свободных окон</span>
+    </a>
+    <a href="/admin/orders?status=Paid" class="stat">
+        <span class="stat-value">@Fmt.Price(Model.PaidThisMonth)</span>
+        <span class="stat-label">оплат в этом месяце (@Model.PaidOrdersThisMonth)</span>
+    </a>
+    <a href="/admin/subscribers" class="stat">
+        <span class="stat-value">@Model.Subscribers</span>
+        <span class="stat-label">подписчиков</span>
+    </a>
+</div>
+
+<div class="cols">
+    <section class="panel">
+        <h2>Ближайшая неделя</h2>
+        @if (Model.Upcoming.Count == 0)
+        {
+            <p class="muted">Записей на ближайшие дни нет.</p>
+        }
+        else
+        {
+            <table class="table">
+                @foreach (var b in Model.Upcoming)
+                {
+                    <tr>
+                        <td class="nowrap"><b>@Fmt.DateTime(b.Slot!.StartsAt)</b></td>
+                        <td><a href="/admin/bookings/details/@b.Id">@b.ClientName</a><br /><span class="muted small">@b.ConsultationType?.Name</span></td>
+                        <td><span class="badge b-@b.Status">@Fmt.Name(b.Status)</span></td>
+                    </tr>
+                }
+            </table>
+        }
+    </section>
+
+    <section class="panel">
+        <h2>Последние заказы</h2>
+        @if (Model.RecentOrders.Count == 0)
+        {
+            <p class="muted">Заказов пока не было.</p>
+        }
+        else
+        {
+            <table class="table">
+                @foreach (var o in Model.RecentOrders)
+                {
+                    <tr>
+                        <td>№@o.Id</td>
+                        <td>@o.Description<br /><span class="muted small">@o.CustomerEmail</span></td>
+                        <td class="nowrap">@Fmt.Price(o.Amount)</td>
+                        <td><span class="badge o-@o.Status">@Fmt.Name(o.Status)</span></td>
+                    </tr>
+                }
+            </table>
+        }
+    </section>
+</div>

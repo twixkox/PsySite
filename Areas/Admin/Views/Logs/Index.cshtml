@@ -1,0 +1,92 @@
+@model LogsViewModel
+@{
+    ViewData["Title"] = "Журнал";
+    var levels = new (string Key, string Title)[] { ("all", "Всё"), ("warn", "Предупреждения и ошибки"), ("error", "Только ошибки"), ("admin", "Действия в админке") };
+    string Url(string? file = null, string? level = null, string? q = null) =>
+        $"/admin/logs?file={Uri.EscapeDataString(file ?? Model.File ?? "")}&level={level ?? Model.Level}&q={Uri.EscapeDataString(q ?? Model.Q ?? "")}";
+    string LevelName(string l) => l switch
+    {
+        "ERR" => "ошибка", "FTL" => "авария", "WRN" => "внимание", "DBG" => "отладка", "VRB" => "подробно", _ => "инфо"
+    };
+}
+<div class="page-top">
+    <div>
+        <h1>Журнал</h1>
+        <p class="muted">Что происходило на сайте: страницы, записи, оплаты, письма, вход в админку и ваши действия.</p>
+    </div>
+    @if (Model.File is not null)
+    {
+        <a href="/admin/logs/download?file=@Uri.EscapeDataString(Model.File)" class="btn btn-ghost">Скачать файл</a>
+    }
+</div>
+
+@if (Model.Files.Count == 0)
+{
+    <p class="empty">Файлов журнала пока нет. Они появятся в папке App_Data/logs после первых запросов к сайту.</p>
+}
+else
+{
+    <form method="get" class="log-filters panel">
+        <label class="field">
+            <span>Файл</span>
+            <select name="file" data-autosubmit>
+                @foreach (var f in Model.Files)
+                {
+                    var label = $"{f.Name} · {(f.Size < 1024 * 1024 ? $"{f.Size / 1024.0:0} КБ" : $"{f.Size / 1024.0 / 1024:0.0} МБ")}";
+                    <option value="@f.Name" selected="@(f.Name == Model.File)">@label</option>
+                }
+            </select>
+        </label>
+        <label class="field grow">
+            <span>Поиск</span>
+            <input type="search" name="q" value="@Model.Q" placeholder="Номер записи или заказа, IP, адрес страницы, текст ошибки…" />
+        </label>
+        <input type="hidden" name="level" value="@Model.Level" />
+        <button type="submit" class="btn">Найти</button>
+    </form>
+
+    <div class="stats stats-small">
+        <div class="stat"><span class="stat-value">@Model.Total</span><span class="stat-label">записей в файле</span></div>
+        <a href="@Url(level: "warn")" class="stat"><span class="stat-value">@Model.Warnings</span><span class="stat-label">предупреждений</span></a>
+        <a href="@Url(level: "error")" class="stat @(Model.Errors > 0 ? "stat-alert" : "")"><span class="stat-value">@Model.Errors</span><span class="stat-label">ошибок</span></a>
+    </div>
+
+    <div class="tabs">
+        @foreach (var (key, title) in levels)
+        {
+            <a href="@Url(level: key)" class="@(Model.Level == key ? "active" : "")">@title</a>
+        }
+    </div>
+
+    @if (Model.Entries.Count == 0)
+    {
+        <p class="empty">По этому фильтру ничего не найдено.</p>
+    }
+    else
+    {
+        @if (Model.Shown > Model.Entries.Count)
+        {
+            <p class="muted small">Показаны последние @Model.Entries.Count из @Model.Shown. Уточните поиск или скачайте файл целиком.</p>
+        }
+        <table class="table panel log-table">
+            <thead><tr><th>Время</th><th>Уровень</th><th>Источник</th><th>Событие</th></tr></thead>
+            <tbody>
+                @foreach (var e in Model.Entries)
+                {
+                    <tr class="lv-@e.Level">
+                        <td class="nowrap mono">@e.Time.ToString("dd.MM HH:mm:ss")</td>
+                        <td><span class="badge lv lv-@e.Level">@LevelName(e.Level)</span></td>
+                        <td class="nowrap muted small log-src" title="@e.Source">@e.Source</td>
+                        <td class="log-msg">
+                            @e.Message
+                            @if (e.Details is not null)
+                            {
+                                <details><summary>подробности</summary><pre>@e.Details</pre></details>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}

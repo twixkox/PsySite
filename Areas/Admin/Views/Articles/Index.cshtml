@@ -1,0 +1,46 @@
+@model List<Article>
+@{
+    ViewData["Title"] = "Материалы";
+    var current = ViewData["Category"] as ArticleCategory?;
+}
+<div class="page-top">
+    <h1>Проекты, тексты, события</h1>
+    <a href="/admin/articles/create?category=@(current ?? ArticleCategory.Project)" class="btn">+ Добавить</a>
+</div>
+
+<div class="tabs">
+    <a href="/admin/articles" class="@(current is null ? "active" : "")">Все</a>
+    @foreach (ArticleCategory c in Enum.GetValues<ArticleCategory>())
+    {
+        <a href="/admin/articles?category=@c" class="@(current == c ? "active" : "")">@Fmt.Name(c)</a>
+    }
+</div>
+
+@if (Model.Count == 0)
+{
+    <p class="empty">Пока ничего нет.</p>
+}
+else
+{
+    <table class="table panel">
+        <thead>
+            <tr><th>Заголовок</th><th>Раздел</th><th>Цена</th><th>Дата</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var a in Model)
+            {
+                <tr class="@(a.IsPublished ? "" : "dim")">
+                    <td>
+                        <a href="/admin/articles/edit/@a.Id"><b>@a.Title</b></a>
+                        @if (!a.IsPublished) { <span class="badge">черновик</span> }
+                        @if (a.ShowOnHome) { <span class="badge b-Confirmed">на главной</span> }
+                    </td>
+                    <td>@Fmt.Name(a.Category)</td>
+                    <td class="nowrap">@(a.Price is > 0 ? Fmt.Price(a.Price.Value) : "—")</td>
+                    <td class="nowrap">@(a.EventDate is DateTime d ? Fmt.DateTime(d) : Fmt.Date(a.CreatedAt))</td>
+                    <td class="nowrap right"><a href="/@Sections.Slug(a.Category)/@a.Slug" target="_blank">на сайте ↗</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

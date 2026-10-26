@@ -1,0 +1,65 @@
+@model ArticleDetailsViewModel
+@{
+    var a = Model.Article;
+    ViewData["Title"] = a.Title;
+    ViewData["Description"] = a.Summary;
+    var sectionSlug = Sections.Slug(a.Category);
+    var paid = a.Price is > 0;
+}
+<section class="page-head">
+    <div class="container narrow">
+        <a href="/@sectionSlug" class="crumb">← @Sections.Title(a.Category)</a>
+        <h1>@a.Title</h1>
+        @if (a.EventDate is DateTime d)
+        {
+            <p class="eyebrow">@Fmt.DateTime(d) (мск)</p>
+        }
+        @if (!string.IsNullOrEmpty(a.Summary))
+        {
+            <p class="lead">@a.Summary</p>
+        }
+    </div>
+</section>
+
+<section class="section section-tight">
+    <div class="container narrow">
+        @if (!string.IsNullOrEmpty(a.ImagePath))
+        {
+            <img src="@a.ImagePath" alt="" class="article-image" />
+        }
+        <div class="prose">@Html.Raw(a.Body)</div>
+
+        @if (paid)
+        {
+            <div class="buy-box" id="buy">
+                <div class="buy-head">
+                    <h2>Участие</h2>
+                    <span class="price price-lg">@Fmt.Price(a.Price!.Value)</span>
+                </div>
+                <form method="post" asp-antiforgery="true" action="#buy" class="form">
+                    <div asp-validation-summary="ModelOnly" class="form-errors"></div>
+                    <input asp-for="Buy.Website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+                    <div class="form-row-2">
+                        <div class="field">
+                            <label asp-for="Buy.Name"></label>
+                            <input asp-for="Buy.Name" autocomplete="name" />
+                            <span asp-validation-for="Buy.Name" class="field-error"></span>
+                        </div>
+                        <div class="field">
+                            <label asp-for="Buy.Email"></label>
+                            <input asp-for="Buy.Email" type="email" autocomplete="email" />
+                            <span asp-validation-for="Buy.Email" class="field-error"></span>
+                        </div>
+                    </div>
+                    <label class="check">
+                        <input type="checkbox" name="Buy.Consent" value="true" @(Model.Buy.Consent ? "checked" : "") />
+                        <span>Принимаю условия <a href="/offer" target="_blank">оферты</a> и даю <a href="/agreement" target="_blank">согласие на обработку данных</a></span>
+                    </label>
+                    <span asp-validation-for="Buy.Consent" class="field-error"></span>
+                    <button type="submit" class="btn">Перейти к оплате</button>
+                    <p class="muted small">После оплаты на почту придёт письмо с подробностями.</p>
+                </form>
+            </div>
+        }
+    </div>
+</section>

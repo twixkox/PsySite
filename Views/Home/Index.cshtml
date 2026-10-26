@@ -1,0 +1,146 @@
+@model HomeViewModel
+@{
+    var site = SiteOptions.Value;
+}
+
+<section class="hero">
+    <div class="container hero-inner">
+        <div class="hero-text">
+            <p class="eyebrow">@site.Tagline</p>
+            <h1 class="hero-title">@site.Name</h1>
+            <p class="lead">Помогаю пройти через перемены, принять решения и вернуть себе ощущение опоры. Онлайн и очно.</p>
+            <div class="hero-actions">
+                <a href="/consultations" class="btn">Записаться на консультацию</a>
+                <a href="/projects" class="btn btn-ghost">Смотреть проекты</a>
+            </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+            <div class="arch">
+                <img src="~/img/portrait.svg" alt="" />
+            </div>
+            <svg class="sprig" viewBox="0 0 120 220" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M60 215 C 58 160, 66 100, 60 10" />
+                <path d="M60 170 C 40 160, 28 140, 30 120 C 48 128, 58 146, 60 170" />
+                <path d="M61 135 C 82 126, 94 106, 92 86 C 74 94, 63 112, 61 135" />
+                <path d="M60 100 C 42 92, 32 74, 36 54 C 52 62, 60 80, 60 100" />
+                <path d="M61 66 C 76 58, 84 42, 82 26 C 68 34, 62 48, 61 66" />
+            </svg>
+        </div>
+    </div>
+</section>
+
+@if (Model.Intro is not null && !string.IsNullOrWhiteSpace(Model.Intro.Body))
+{
+    <section class="section">
+        <div class="container split">
+            <h2 class="section-title">Кто я</h2>
+            <div class="prose prose-columns">@Html.Raw(Model.Intro.Body)</div>
+        </div>
+        <div class="container"><a href="/about" class="link-arrow">Подробнее обо мне</a></div>
+    </section>
+}
+
+@if (Model.ConsultationTypes.Count > 0)
+{
+    <section class="section section-tinted">
+        <div class="container">
+            <div class="section-head">
+                <h2 class="section-title">Консультации</h2>
+                <a href="/consultations" class="link-arrow">Выбрать время</a>
+            </div>
+            <div class="grid grid-3">
+                @foreach (var t in Model.ConsultationTypes)
+                {
+                    <div class="offer">
+                        <h3>@t.Name</h3>
+                        <p class="muted">@t.DurationMinutes мин</p>
+                        @if (!string.IsNullOrEmpty(t.Description))
+                        {
+                            <p>@t.Description</p>
+                        }
+                        <div class="offer-footer">
+                            <span class="price">@Fmt.Price(t.Price)</span>
+                            <a href="/consultations?type=@t.Id" class="btn btn-small">Записаться</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@if (Model.Projects.Count > 0)
+{
+    <section class="section">
+        <div class="container">
+            <div class="section-head">
+                <h2 class="section-title">Проекты</h2>
+                <a href="/projects" class="link-arrow">Все проекты</a>
+            </div>
+            <div class="grid grid-3">
+                @foreach (var a in Model.Projects)
+                {
+                    <partial name="_ArticleCard" model="a" />
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@if (Model.Events.Count > 0 || Model.Texts.Count > 0)
+{
+    <section class="section section-tinted">
+        <div class="container grid grid-2 gap-lg">
+            @if (Model.Events.Count > 0)
+            {
+                <div>
+                    <div class="section-head">
+                        <h2 class="section-title">Скоро</h2>
+                        <a href="/events" class="link-arrow">Все события</a>
+                    </div>
+                    <ul class="list-dated">
+                        @foreach (var e in Model.Events)
+                        {
+                            <li>
+                                <span class="date-badge">
+                                    <b>@e.EventDate!.Value.Day</b>
+                                    <small>@e.EventDate.Value.ToString("MMM")</small>
+                                </span>
+                                <a href="/events/@e.Slug">@e.Title</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+            @if (Model.Texts.Count > 0)
+            {
+                <div>
+                    <div class="section-head">
+                        <h2 class="section-title">Тексты</h2>
+                        <a href="/texts" class="link-arrow">Все тексты</a>
+                    </div>
+                    <ul class="list-plain">
+                        @foreach (var t in Model.Texts)
+                        {
+                            <li>
+                                <a href="/texts/@t.Slug">@t.Title</a>
+                                @if (!string.IsNullOrEmpty(t.Summary))
+                                {
+                                    <p class="muted">@t.Summary</p>
+                                }
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+    </section>
+}
+
+<section class="section cta-band">
+    <div class="container cta-inner">
+        <h2>Хотите обсудить свою ситуацию?</h2>
+        <p>Выберите формат и удобное время — подтверждение придёт на почту.</p>
+        <a href="/consultations" class="btn btn-light">Записаться</a>
+    </div>
+</section>

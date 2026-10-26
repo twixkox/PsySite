@@ -1,0 +1,40 @@
+@model ArticleListViewModel
+@{
+    ViewData["Title"] = Sections.Title(Model.Category);
+    ViewData["Description"] = Sections.Intro(Model.Category);
+}
+<section class="page-head">
+    <div class="container">
+        <h1>@Sections.Title(Model.Category)</h1>
+        <p class="lead">@Sections.Intro(Model.Category)</p>
+    </div>
+</section>
+
+<section class="section section-tight">
+    <div class="container">
+        @if (Model.Items.Count == 0)
+        {
+            <p class="empty">Здесь пока ничего нет. Загляните позже или <a href="#subscribe">подпишитесь на рассылку</a>.</p>
+        }
+        else
+        {
+            <div class="grid grid-3">
+                @foreach (var a in Model.Items)
+                {
+                    <partial name="_ArticleCard" model="a" />
+                }
+            </div>
+        }
+
+        @if (Model.PastEvents.Count > 0)
+        {
+            <h2 class="section-title section-title-sm">Прошедшие</h2>
+            <ul class="list-plain list-muted">
+                @foreach (var e in Model.PastEvents)
+                {
+                    <li><a href="/events/@e.Slug">@e.Title</a> <span class="muted">— @Fmt.Date(e.EventDate!.Value)</span></li>
+                }
+            </ul>
+        }
+    </div>
+</section>

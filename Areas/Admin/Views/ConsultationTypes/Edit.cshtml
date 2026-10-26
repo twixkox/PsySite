@@ -1,0 +1,45 @@
+@model ConsultationType
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Новый формат" : Model.Name;
+}
+<div class="page-top">
+    <div>
+        <a href="/admin/consultationtypes" class="crumb">← К списку</a>
+        <h1>@ViewData["Title"]</h1>
+    </div>
+</div>
+
+<form method="post" asp-antiforgery="true" action="/admin/consultationtypes/save" class="form panel narrow">
+    <input type="hidden" asp-for="Id" />
+
+    <label class="field">
+        <span>Название</span>
+        <input asp-for="Name" placeholder="Например: Онлайн-консультация" />
+        <span asp-validation-for="Name" class="field-error"></span>
+    </label>
+
+    <label class="field">
+        <span>Описание</span>
+        <textarea asp-for="Description" rows="3"></textarea>
+    </label>
+
+    <div class="row-2">
+        <label class="field">
+            <span>Длительность, минут</span>
+            <input asp-for="DurationMinutes" />
+            <span asp-validation-for="DurationMinutes" class="field-error"></span>
+        </label>
+        <label class="field">
+            <span>Цена, ₽ (0 — бесплатно)</span>
+            <input asp-for="Price" asp-format="{0:0.##}" inputmode="decimal" />
+            <span asp-validation-for="Price" class="field-error"></span>
+        </label>
+    </div>
+
+    <label class="check"><input asp-for="RequirePrepayment" /> Требовать оплату при записи (иначе клиент записывается без оплаты)</label>
+    <label class="check"><input asp-for="IsActive" /> Показывать на сайте</label>
+
+    <div class="form-actions">
+        <button type="submit" class="btn">Сохранить</button>
+    </div>
+</form>

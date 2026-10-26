@@ -1,0 +1,104 @@
+@model Article
+@{
+    var isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "Новый материал" : Model.Title;
+}
+@section Head { <partial name="_EditorHead" /> }
+
+<div class="page-top">
+    <div>
+        <a href="/admin/articles?category=@Model.Category" class="crumb">← К списку</a>
+        <h1>@(isNew ? "Новый материал" : Model.Title)</h1>
+    </div>
+    @if (!isNew && Model.IsPublished)
+    {
+        <a href="/@Sections.Slug(Model.Category)/@Model.Slug" target="_blank" class="btn btn-ghost">Открыть на сайте ↗</a>
+    }
+</div>
+
+<form method="post" asp-antiforgery="true" action="/admin/articles/save" enctype="multipart/form-data" class="form panel">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="ImagePath" />
+    <div asp-validation-summary="ModelOnly" class="flash error"></div>
+
+    <div class="row-2">
+        <label class="field">
+            <span>Раздел</span>
+            <select asp-for="Category" asp-items="Html.GetEnumSelectList<ArticleCategory>()"></select>
+        </label>
+        <div class="checks">
+            <label class="check"><input asp-for="IsPublished" /> Опубликовано</label>
+            <label class="check"><input asp-for="ShowOnHome" /> Показывать на главной (для проектов)</label>
+        </div>
+    </div>
+
+    <label class="field">
+        <span>Заголовок</span>
+        <input asp-for="Title" data-slug-source />
+        <span asp-validation-for="Title" class="field-error"></span>
+    </label>
+
+    <label class="field">
+        <span>Адрес страницы</span>
+        <span class="slug-input"><span class="muted">/@Sections.Slug(Model.Category)/</span><input asp-for="Slug" data-slug-target="@(isNew ? "auto" : "")" /></span>
+        <span asp-validation-for="Slug" class="field-error"></span>
+        <small class="muted">Латиницей через дефис. Заполняется сам по заголовку.</small>
+    </label>
+
+    <label class="field">
+        <span>Краткое описание (для карточки и поисковиков)</span>
+        <textarea asp-for="Summary" rows="2"></textarea>
+    </label>
+
+    <div class="field">
+        <span>Текст</span>
+        <textarea asp-for="Body" data-editor rows="14"></textarea>
+    </div>
+
+    <div class="row-2">
+        <div class="field">
+            <span>Картинка</span>
+            @if (!string.IsNullOrEmpty(Model.ImagePath))
+            {
+                <img src="@Model.ImagePath" alt="" class="thumb" />
+                <label class="check"><input type="checkbox" name="removeImage" value="true" /> Убрать картинку</label>
+            }
+            <input type="file" name="image" accept="image/*" />
+            <span asp-validation-for="ImagePath" class="field-error"></span>
+            @Html.ValidationMessage("image", null, new { @class = "field-error" })
+        </div>
+        <label class="field">
+            <span>Дата и время (для событий)</span>
+            <input asp-for="EventDate" type="datetime-local" />
+        </label>
+    </div>
+
+    <fieldset class="box">
+        <legend>Оплата</legend>
+        <div class="row-2">
+            <label class="field">
+                <span>Цена, ₽</span>
+                <input asp-for="Price" asp-format="{0:0.##}" inputmode="decimal" placeholder="Пусто — бесплатно" />
+                <span asp-validation-for="Price" class="field-error"></span>
+            </label>
+            <label class="field">
+                <span>Ссылка для оплативших</span>
+                <input asp-for="PaidAccessUrl" placeholder="https://..." />
+                <small class="muted">Придёт покупателю в письме после оплаты: запись вебинара, чат группы и т.п.</small>
+            </label>
+        </div>
+    </fieldset>
+
+    <div class="form-actions">
+        <button type="submit" class="btn">Сохранить</button>
+    </div>
+</form>
+
+@if (!isNew)
+{
+    <form method="post" asp-antiforgery="true" action="/admin/articles/delete/@Model.Id" class="danger-zone">
+        <button type="submit" class="btn btn-danger" data-confirm="Удалить «@Model.Title»? Это нельзя отменить.">Удалить</button>
+    </form>
+}
+
+@section Scripts { <partial name="_EditorScripts" /> }

@@ -1,0 +1,63 @@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    string Active(string name) => controller == name ? "active" : "";
+}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>@ViewData["Title"] — админка</title>
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="admin">
+            <aside class="sidebar">
+                <a href="/admin" class="brand">@SiteOptions.Value.Name<small>админка</small></a>
+                <nav>
+                    <a href="/admin" class="@Active("Dashboard")">Сводка</a>
+                    <div class="nav-group">Консультации</div>
+                    <a href="/admin/bookings" class="@Active("Bookings")">Записи</a>
+                    <a href="/admin/slots" class="@Active("Slots")">Расписание</a>
+                    <a href="/admin/consultationtypes" class="@Active("ConsultationTypes")">Форматы и цены</a>
+                    <div class="nav-group">Содержимое</div>
+                    <a href="/admin/articles" class="@Active("Articles")">Проекты, тексты, события</a>
+                    <a href="/admin/pages" class="@Active("Pages")">Страницы</a>
+                    <div class="nav-group">Продажи</div>
+                    <a href="/admin/orders" class="@Active("Orders")">Заказы и оплаты</a>
+                    <a href="/admin/subscribers" class="@Active("Subscribers")">Подписчики</a>
+                    <div class="nav-group">Сайт</div>
+                    <a href="/admin/logs" class="@Active("Logs")">Журнал</a>
+                </nav>
+                <div class="sidebar-foot">
+                    <a href="/" target="_blank">Открыть сайт ↗</a>
+                    <form method="post" asp-antiforgery="true" action="/admin/logout">
+                        <button type="submit" class="link-btn">Выйти</button>
+                    </form>
+                </div>
+            </aside>
+            <main class="content">
+                @if (TempData["Message"] is string msg)
+                {
+                    <div class="flash ok">@msg</div>
+                }
+                @if (TempData["Error"] is string err)
+                {
+                    <div class="flash error">@err</div>
+                }
+                @RenderBody()
+            </main>
+        </div>
+    }
+    else
+    {
+        @RenderBody()
+    }
+    <script src="~/js/admin.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

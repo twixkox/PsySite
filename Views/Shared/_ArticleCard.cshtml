@@ -1,0 +1,28 @@
+@model Article
+@{
+    var url = $"/{Sections.Slug(Model.Category)}/{Model.Slug}";
+}
+<article class="card">
+    @if (!string.IsNullOrEmpty(Model.ImagePath))
+    {
+        <a href="@url" class="card-image"><img src="@Model.ImagePath" alt="" loading="lazy" /></a>
+    }
+    <div class="card-body">
+        @if (Model.EventDate is DateTime d)
+        {
+            <div class="card-meta">@Fmt.DateTime(d)</div>
+        }
+        <h3 class="card-title"><a href="@url">@Model.Title</a></h3>
+        @if (!string.IsNullOrEmpty(Model.Summary))
+        {
+            <p class="card-text">@Model.Summary</p>
+        }
+        <div class="card-footer">
+            @if (Model.Price is decimal price && price > 0)
+            {
+                <span class="price">@Fmt.Price(price)</span>
+            }
+            <a href="@url" class="link-arrow">Подробнее</a>
+        </div>
+    </div>
+</article>

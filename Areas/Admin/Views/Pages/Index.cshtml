@@ -1,0 +1,29 @@
+@model List<Page>
+@{
+    ViewData["Title"] = "Страницы";
+}
+<div class="page-top">
+    <h1>Страницы</h1>
+    <a href="/admin/pages/create" class="btn">+ Новая страница</a>
+</div>
+<p class="muted">Простые страницы с текстом. Галочка «Показывать в меню» добавляет страницу в верхнее меню сайта. «Главная: о себе» — это текст блока «Кто я» на главной.</p>
+
+<table class="table panel">
+    <thead>
+        <tr><th>Название</th><th>Адрес</th><th>В меню</th><th>Изменена</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td>
+                    <a href="/admin/pages/edit/@p.Id"><b>@p.Title</b></a>
+                    @if (PagesController.SystemSlugs.Contains(p.Slug)) { <span class="badge">служебная</span> }
+                </td>
+                <td><a href="/@(p.Slug == "home" ? "" : p.Slug)" target="_blank">/@(p.Slug == "home" ? "" : p.Slug)</a></td>
+                <td>@(p.ShowInMenu ? $"да ({p.MenuOrder})" : "—")</td>
+                <td class="nowrap">@Fmt.Date(p.UpdatedAt)</td>
+            </tr>
+        }
+    </tbody>
+</table>

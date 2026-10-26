@@ -1,0 +1,45 @@
+@model PaymentResultViewModel
+@{
+    var o = Model.Order;
+    ViewData["Title"] = o.Status == OrderStatus.Paid ? "Оплата прошла" : "Оплата";
+}
+<section class="page-head">
+    <div class="container narrow">
+        @switch (o.Status)
+        {
+            case OrderStatus.Paid:
+                <p class="eyebrow">Заказ №@o.Id</p>
+                <h1>Спасибо, оплата прошла</h1>
+                @if (Model.Booking?.Slot is not null)
+                {
+                    <p class="lead">Вы записаны: <b>@Model.Booking.ConsultationType?.Name</b>, @Fmt.DayTitle(Model.Booking.Slot.StartsAt).ToLower(), в @Fmt.Time(Model.Booking.Slot.StartsAt) по Москве. Подтверждение отправлено на @o.CustomerEmail.</p>
+                }
+                else if (Model.Article is not null)
+                {
+                    <p class="lead">«@Model.Article.Title» — подробности отправлены на @o.CustomerEmail.</p>
+                    @if (!string.IsNullOrEmpty(Model.Article.PaidAccessUrl))
+                    {
+                        <p><a href="@Model.Article.PaidAccessUrl" class="btn" target="_blank" rel="noopener">Открыть материал</a></p>
+                    }
+                }
+                break;
+
+            case OrderStatus.Pending:
+                <p class="eyebrow">Заказ №@o.Id · @Fmt.Price(o.Amount)</p>
+                <h1>Ждём подтверждения оплаты</h1>
+                <p class="lead">Если вы уже оплатили, обновите страницу через минуту — банк иногда подтверждает платёж не сразу.</p>
+                <p class="actions-row">
+                    <a href="/pay/result/@o.PublicId" class="btn btn-ghost">Обновить</a>
+                    <a href="/pay/start/@o.PublicId" class="btn">Оплатить</a>
+                </p>
+                break;
+
+            default:
+                <p class="eyebrow">Заказ №@o.Id</p>
+                <h1>Заказ отменён</h1>
+                <p class="lead">Время на оплату истекло или заказ был отменён. Можно оформить его заново.</p>
+                <p><a href="@(o.Kind == OrderKind.Booking ? "/consultations" : "/")" class="btn">Оформить заново</a></p>
+                break;
+        }
+    </div>
+</section>

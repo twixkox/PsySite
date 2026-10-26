@@ -1,0 +1,14 @@
+@model Page
+@{
+    ViewData["Title"] = Model.Title;
+}
+<section class="page-head">
+    <div class="container narrow">
+        <h1>@Model.Title</h1>
+    </div>
+</section>
+<section class="section section-tight">
+    <div class="container narrow prose">
+        @Html.Raw(Model.Body)
+    </div>
+</section>
