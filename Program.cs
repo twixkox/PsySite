@@ -53,8 +53,11 @@ try
     builder.Services.AddDatabase(builder.Configuration, builder.Environment.ContentRootPath);
 
     // Ключи шифрования cookie храним на диске, чтобы вход в админку не сбрасывался при перезапуске.
-    builder.Services.AddDataProtection()
+    var dataProtection = builder.Services.AddDataProtection()
+        .SetApplicationName("PsySite")
         .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(dataDir, "keys")));
+    // На Windows (IIS) ключи дополнительно шифруются средствами Windows: украденный файл ключа бесполезен на другом компьютере.
+    if (OperatingSystem.IsWindows()) dataProtection.ProtectKeysWithDpapi(protectToLocalMachine: true);
 
     // Не превращать кириллицу в &#x...; при выводе в HTML (всё равно безопасно — спецсимволы < > " & экранируются).
     builder.Services.Configure<WebEncoderOptions>(o =>

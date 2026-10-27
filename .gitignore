@@ -7,3 +7,6 @@ publish/
 App_Data/
 wwwroot/uploads/*
 !wwwroot/uploads/.gitkeep
+
+# Настройки боевого сайта с паролями — только на сервере
+appsettings.Production.json

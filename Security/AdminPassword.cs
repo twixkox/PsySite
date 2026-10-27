@@ -19,6 +19,8 @@ public static class AdminPassword
             return "Пароль администратора не задан.";
         if (!isDevelopment && password.Length < MinLength)
             return $"Пароль администратора слишком короткий: нужно не меньше {MinLength} символов.";
+        if (!isDevelopment && password.Contains("ЗАМЕНИТЕ", StringComparison.OrdinalIgnoreCase))
+            return "В настройках остался пароль-заглушка из шаблона appsettings.Production.example.json.";
         return null;
     }
 

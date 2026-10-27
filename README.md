@@ -287,6 +287,19 @@ CREATE DATABASE psysite OWNER psysite;`), таблицы сайт создаст
 
 ---
 
+## Публикация на IIS (Windows Server)
+
+Всё подготовлено: профиль публикации, `web.config` и скрипты установки и обновления.
+Пошаговая инструкция — **[deploy/README.md](deploy/README.md)**. Коротко:
+
+```
+dotnet publish -c Release -p:PublishProfile=IIS          # на своём компьютере
+.\setup-iis.ps1 -SourcePath C:\Temp\publish-iis -HostName example.ru   # на сервере, один раз
+.\update-site.ps1 -SourcePath C:\Temp\publish-iis                       # при каждом обновлении
+```
+
+---
+
 ## Публикация на сервер (Linux VPS)
 
 1. На сервере установите .NET 10 Runtime (ASP.NET Core) и nginx.

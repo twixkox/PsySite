@@ -8,6 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Настройки разработки (пароль admin123) на сервер не попадают. -->
+    <Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
+    <!-- Настройки боевого сайта живут только на сервере: не публикуются и не перезаписываются. -->
+    <Content Update="appsettings.Production.json" CopyToPublishDirectory="Never" />
+    <!-- Папка deploy — скрипты для администратора, на сайт не публикуются. -->
+    <Content Remove="deploy\**" />
+    <None Include="deploy\**" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.*" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />

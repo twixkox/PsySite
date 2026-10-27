@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Сайт обновляется</title>
+    <style>
+        body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f7f2eb; color: #2c2824;
+               font: 17px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; padding: 20px; }
+        h1 { font: 600 2.2rem/1.2 Georgia, serif; margin: 0 0 .4em; }
+        p { color: #6b6159; margin: 0; }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>Сайт обновляется</h1>
+        <p>Это займёт пару минут. Пожалуйста, обновите страницу чуть позже.</p>
+    </div>
+</body>
+</html>
+<!--
+  Пока этот файл лежит в папке сайта, IIS останавливает сайт и показывает эту страницу всем посетителям.
+  Так можно безопасно заменить файлы программы. Скрипт deploy\update-site.ps1 кладёт и убирает его сам.
+  Файл должен быть больше 512 байт — иначе Internet Explorer/Edge могут показать свою страницу ошибки.
+-->
