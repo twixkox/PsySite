@@ -18,8 +18,8 @@
     .\setup-iis.ps1 -SourcePath C:\Temp\publish-iis -HostName example.ru
 
 .EXAMPLE
-    # Без домена, для проверки на самом сервере по адресу http://localhost:8080
-    .\setup-iis.ps1 -SourcePath C:\Temp\publish-iis -Port 8080
+    # Без домена, для проверки на самом сервере по адресу http://localhost:8090
+    .\setup-iis.ps1 -SourcePath C:\Temp\publish-iis -Port 8090
 #>
 [CmdletBinding()]
 param(
@@ -95,6 +95,33 @@ function Get-SiteStatus([int]$port, [string]$hostHeader) {
 
 # Сайт работает, если ответил 2xx или 3xx: после настройки HTTPS на http-запрос он отвечает перенаправлением (301/307).
 function Test-SiteOk($code) { return ($code -ge 200 -and $code -lt 400) }
+
+# Кто слушает порт: $null — порт свободен (или его уже занимает сам наш сайт), иначе — описание того, кто занял.
+function Get-PortOwner([int]$port, [string]$siteName) {
+    $listen = Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $listen) { return $null }
+    # Порт слушает IIS (системный процесс 4): проверяем, не наш ли это сайт.
+    $ours = Get-WebBinding -Name $siteName -Protocol http -ErrorAction SilentlyContinue |
+        Where-Object { $_.bindingInformation.Split(':')[1] -eq "$port" }
+    if ($ours) { return $null }
+    if ($listen.OwningProcess -eq 4) {
+        $other = Get-WebBinding -Protocol http -ErrorAction SilentlyContinue |
+            Where-Object { $_.bindingInformation.Split(':')[1] -eq "$port" } | Select-Object -First 1
+        if ($other) { return "другой сайт IIS ($($other.ItemXPath -replace '.*@name=''([^'']+)''.*', '$1'))" }
+        return 'системная служба Windows'
+    }
+    $proc = Get-Process -Id $listen.OwningProcess -ErrorAction SilentlyContinue
+    if ($proc) { return "программа $($proc.ProcessName) (PID $($proc.Id))" }
+    return "процесс с PID $($listen.OwningProcess)"
+}
+
+# Первый свободный порт из привычных для сайтов.
+function Find-FreePort([string]$siteName) {
+    foreach ($p in 8090, 8088, 8085, 8081, 8888, 5080, 5180, 9080) {
+        if (-not (Get-PortOwner $p $siteName)) { return $p }
+    }
+    return $null
+}
 
 if ($env:PSYSITE_SETUP_TEST) { return }
 
@@ -174,18 +201,32 @@ Set-ItemProperty $poolPath -Name processModel.maxProcesses -Value 1         # о
 # ---------- 6. Сайт ----------
 Write-Step "Сайт $SiteName"
 $site = Get-Website -Name $SiteName -ErrorAction SilentlyContinue
-if (-not $site) {
-    $busy = Get-WebBinding | Where-Object { $_.protocol -eq 'http' -and $_.bindingInformation -eq "*:${Port}:$HostName" }
-    if ($busy) {
-        Stop-WithError ("Порт $Port без домена уже занят другим сайтом IIS (обычно «Default Web Site»). " +
-            "Укажите домен (-HostName example.ru), другой порт (-Port 8080) или остановите сайт по умолчанию в диспетчере IIS.")
+
+# Свободен ли порт. С доменом (-HostName) порт 80 можно делить с другими сайтами IIS — проверяем только без домена.
+if (-not $HostName) {
+    $owner = Get-PortOwner $Port $SiteName
+    if ($owner) {
+        $free = Find-FreePort $SiteName
+        $hint = if ($free) { "Например, свободен $free — запустите скрипт ещё раз с ключом -Port $free." } else { 'Укажите другой порт ключом -Port.' }
+        Stop-WithError "Порт $Port уже занят: $owner. $hint"
     }
+}
+
+if (-not $site) {
     New-Website -Name $SiteName -PhysicalPath $SitePath -ApplicationPool $SiteName -Port $Port -HostHeader $HostName | Out-Null
     if ($HostName) { New-WebBinding -Name $SiteName -Protocol http -Port $Port -HostHeader "www.$HostName" }
     Write-Ok 'Создан'
 } else {
     Set-ItemProperty "IIS:\Sites\$SiteName" -Name physicalPath -Value $SitePath
     Set-ItemProperty "IIS:\Sites\$SiteName" -Name applicationPool -Value $SiteName
+    # Порт сменился с прошлого запуска — переносим http-привязки сайта на новый порт.
+    foreach ($b in @(Get-WebBinding -Name $SiteName -Protocol http)) {
+        $parts = $b.bindingInformation.Split(':')            # «*:8080:example.ru»
+        if ($parts[1] -ne "$Port") {
+            Set-WebBinding -Name $SiteName -BindingInformation $b.bindingInformation -PropertyName Port -Value $Port
+            Write-Ok "Порт сайта изменён: $($parts[1]) → $Port"
+        }
+    }
     Write-Ok 'Уже есть — обновил папку и пул'
 }
 try { Set-ItemProperty "IIS:\Sites\$SiteName" -Name applicationDefaults.preloadEnabled -Value $true } catch { }

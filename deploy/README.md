@@ -66,8 +66,8 @@ cd C:\Temp\deploy
 .\setup-iis.ps1 -SourcePath C:\Temp\publish-iis -HostName example.ru
 ```
 
-- Нет домена или хотите сначала проверить: вместо `-HostName example.ru` укажите `-Port 8080`
-  и откройте на сервере http://localhost:8080.
+- Нет домена или хотите сначала проверить: вместо `-HostName example.ru` укажите `-Port 8090` (если порт занят, скрипт сам подскажет свободный)
+  и откройте на сервере http://localhost:8090.
 - Если IIS ещё нет — добавьте `-InstallIis`.
 
 Скрипт:
