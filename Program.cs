@@ -29,7 +29,12 @@ Log.Logger = LoggingSetup.CreateBootstrapLogger();
 
 try
 {
-    var builder = WebApplication.CreateBuilder(args);
+    // Папка сайта ищется так, чтобы он находил appsettings.json при запуске из любой папки (см. AppPaths).
+    var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+    {
+        Args = args,
+        ContentRootPath = AppPaths.ResolveContentRoot()
+    });
 
     // ---------- Логирование (подробности — в Logging/LoggingSetup.cs) ----------
     builder.Services.Configure<LogOptions>(builder.Configuration.GetSection("Logs"));
@@ -42,11 +47,10 @@ try
     builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
     builder.Services.Configure<PaymentOptions>(builder.Configuration.GetSection("Payments"));
 
-    // ---------- База данных (SQLite, файл App_Data/site.db) ----------
+    // ---------- База данных: SQLite, PostgreSQL или SQL Server (см. Data/DatabaseSetup.cs) ----------
     var dataDir = Path.Combine(builder.Environment.ContentRootPath, "App_Data");
     Directory.CreateDirectory(dataDir);
-    builder.Services.AddDbContext<AppDbContext>(o =>
-        o.UseSqlite(builder.Configuration.GetConnectionString("Default")));
+    builder.Services.AddDatabase(builder.Configuration, builder.Environment.ContentRootPath);
 
     // Ключи шифрования cookie храним на диске, чтобы вход в админку не сбрасывался при перезапуске.
     builder.Services.AddDataProtection()
@@ -134,12 +138,7 @@ try
     var app = builder.Build();
 
     // ---------- Создаём базу и заполняем примерами при первом запуске ----------
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        if (await db.Database.EnsureCreatedAsync()) Log.Information("Создана новая база данных");
-        await SeedData.EnsureSeededAsync(db);
-    }
+    await DatabaseSetup.InitializeAsync(app.Services, builder.Configuration, Log.Logger);
 
     // ---------- Конвейер обработки запросов ----------
     // Нужно, когда сайт стоит за nginx: чтобы правильно определялись https и IP клиента.
@@ -217,10 +216,22 @@ try
 
     app.Run();
 }
+catch (DatabaseStartupException ex)
+{
+    // Понятная подсказка первой строкой, технические подробности — ниже.
+    Log.Fatal(ex.InnerException, "Сайт не смог запуститься. {Hint}", ex.Message);
+    Environment.ExitCode = 1;
+}
+catch (InvalidOperationException ex) when (ex.Message.Contains("ConnectionStrings") || ex.Message.Contains("Database:Provider") || ex.Message.Contains("строке подключения"))
+{
+    // Ошибка в настройках базы — достаточно понятного сообщения, без технических подробностей.
+    Log.Fatal("Сайт не смог запуститься: {Reason}", ex.Message);
+    Environment.ExitCode = 1;
+}
 catch (Exception ex) when (ex is not HostAbortedException) // HostAbortedException — штатная остановка при работе инструментов EF
 {
-    Log.Fatal(ex, "Сайт не смог запуститься");
-    throw;
+    Log.Fatal(ex, "Сайт не смог запуститься: {Reason}", ex.Message);
+    Environment.ExitCode = 1;
 }
 finally
 {

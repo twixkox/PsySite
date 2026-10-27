@@ -45,7 +45,7 @@ public static class LoggingSetup
             .Enrich.With<ShortSourceEnricher>()
             .WriteTo.Console(outputTemplate: ConsoleTemplate)
             .WriteTo.File(
-                Path.Combine(LogDirectory(Directory.GetCurrentDirectory()), "startup-.log"),
+                Path.Combine(LogDirectory(AppPaths.ResolveContentRoot()), "startup-.log"),
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 10,
                 outputTemplate: FileTemplate)

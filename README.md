@@ -3,7 +3,7 @@
 Личный сайт специалиста: главная, «Обо мне», проекты, тексты, события, записи вебинаров,
 запись на консультацию с оплатой, продажа платных материалов, подписка на рассылку и админка.
 
-**Технологии:** .NET 10, ASP.NET Core MVC (Razor), Entity Framework Core, SQLite.
+**Технологии:** .NET 10, ASP.NET Core MVC (Razor), Entity Framework Core; база — SQLite (по умолчанию), PostgreSQL или SQL Server.
 Никаких тяжёлых фреймворков на фронте — обычные Razor-шаблоны, CSS и немного JavaScript.
 
 ---
@@ -140,6 +140,31 @@ CloudPayments, Robokassa, Т-Банк и т.п. подключаются так 
 
 Для Яндекса нужен не обычный пароль, а «пароль приложения» из настроек аккаунта.
 Уведомления о новых записях и оплатах приходят на `Site:ContactEmail`.
+
+---
+
+## База данных
+
+По умолчанию — **SQLite**: файл `App_Data/site.db`, ничего ставить не нужно, база и таблицы
+создаются при первом запуске. Для PostgreSQL или SQL Server поменяйте две настройки:
+
+| База | `Database:Provider` | Пример `ConnectionStrings:Default` |
+|---|---|---|
+| SQLite | `Sqlite` | `Data Source=App_Data/site.db` |
+| PostgreSQL | `PostgreSql` | `Host=localhost;Port=5432;Database=psysite;Username=psysite;Password=...` |
+| SQL Server LocalDB | `SqlServer` | `Server=(localdb)\\MSSQLLocalDB;Database=PsySite;Trusted_Connection=True;TrustServerCertificate=True` |
+
+В JSON обратный слэш пишется двойным: `(localdb)\\MSSQLLocalDB`.
+
+Для PostgreSQL базу и пользователя создайте заранее (`CREATE USER psysite WITH PASSWORD '...';
+CREATE DATABASE psysite OWNER psysite;`), таблицы сайт создаст сам. Если подключиться не удалось,
+сайт останавливается и пишет строку `FTL` с подсказкой на русском, что проверить.
+
+Таблицы создаются только в пустой базе и потом не меняются. Если после обновления сайта появилась
+ошибка `no such column`, при разработке достаточно удалить `App_Data/site.db`; на боевом сайте
+с данными так делать нельзя — нужны миграции EF Core.
+
+Код подключения — `Data/DatabaseSetup.cs`.
 
 ---
 
