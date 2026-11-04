@@ -287,6 +287,34 @@ CREATE DATABASE psysite OWNER psysite;`), таблицы сайт создаст
 
 ---
 
+## Публикация через Docker (production)
+
+1. Скопируйте и заполните настройки:
+   ```bash
+   cp .env.example .env
+   ```
+   Обязательно задайте `ADMIN_PASSWORD` (не короче 10 символов, лучше 16+), `SITE_NAME`,
+   `SITE_CONTACT_EMAIL`, `SITE_BASE_URL` и домен в `ALLOWED_HOSTS`. Для писем и настоящей
+   оплаты заполните параметры SMTP и ЮKassa. Файл `.env` исключён из Git и Docker-образа.
+2. Запустите сайт:
+   ```bash
+   docker compose up -d --build
+   ```
+3. Откройте http://localhost:8082. По умолчанию порт привязан только к `127.0.0.1` для работы
+   через Nginx. Для прямого доступа по IP задайте `BIND_ADDRESS=0.0.0.0` и ограничьте порт брандмауэром.
+
+База SQLite, журналы и ключи cookie сохраняются в томе `psysite_appdata`, загруженные изображения —
+в `psysite_uploads`. Тестовая оплата `Fake` в production отключена самим приложением.
+
+Обновление и журналы:
+```bash
+git pull
+docker compose up -d --build
+docker compose logs -f --tail=100 web
+```
+
+---
+
 ## Публикация на IIS (Windows Server)
 
 Всё подготовлено: профиль публикации, `web.config` и скрипты установки и обновления.

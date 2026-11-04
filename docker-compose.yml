@@ -1,0 +1,33 @@
+name: psysite
+
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8082}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      TZ: Europe/Moscow
+      AllowedHosts: "${ALLOWED_HOSTS:-localhost}"
+      Admin__Login: "${ADMIN_LOGIN:-admin}"
+      Admin__Password: "${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}"
+      Site__Name: "${SITE_NAME:-Имя Фамилия}"
+      Site__ContactEmail: "${SITE_CONTACT_EMAIL:-hello@example.com}"
+      Site__BaseUrl: "${SITE_BASE_URL:-http://localhost:8082}"
+      Smtp__Host: "${SMTP_HOST:-}"
+      Smtp__User: "${SMTP_USER:-}"
+      Smtp__Password: "${SMTP_PASSWORD:-}"
+      Smtp__From: "${SMTP_FROM:-}"
+      Smtp__FromName: "${SMTP_FROM_NAME:-}"
+      Payments__Provider: "${PAYMENTS_PROVIDER:-Fake}"
+      Payments__YooKassa__ShopId: "${YOOKASSA_SHOP_ID:-}"
+      Payments__YooKassa__SecretKey: "${YOOKASSA_SECRET_KEY:-}"
+    volumes:
+      - appdata:/app/App_Data
+      - uploads:/app/wwwroot/uploads
+
+volumes:
+  appdata:
+  uploads:
